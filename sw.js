@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "task-matrix-shell-v5";
+const CACHE_NAME = "task-matrix-shell-v6";
 const APP_FILES = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 
 self.addEventListener("install", event => {
