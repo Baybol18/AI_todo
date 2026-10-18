@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f4f0">
+  <meta name="description" content="Task Matrix RPG — задачи, фокус и маленькие победы каждый день.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Task Matrix">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <title>Task Matrix — твой день, в балансе</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f4f0;
+      --surface: #fffefa;
+      --surface-2: #f0efe9;
+      --ink: #23251f;
+      --muted: #85867d;
+      --line: rgba(49, 51, 43, .09);
+      --accent: #526b51;
+      --accent-strong: #3e583e;
+      --accent-soft: #e7eee3;
+      --gold: #c7943d;
+      --red: #cc7067;
+      --blue: #6e8ba5;
+      --shadow: 0 12px 36px rgba(51, 48, 39, .055);
+      --radius: 22px;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { min-width: 320px; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 4% 0%, rgba(218, 224, 204, .32), transparent 32rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: var(--font);
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(82, 107, 81, .28);
+      outline-offset: 2px;
+    }
+    .app-shell { max-width: 1440px; min-height: 100vh; margin: 0 auto; padding: 34px 56px 54px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 220px; }
+    .brand-mark {
+      display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px;
+      background: #354735; color: #f6f5ef; box-shadow: 0 5px 14px rgba(45, 65, 43, .2);
+    }
+    .brand-mark svg { width: 21px; height: 21px; }
+    .brand-name { font-size: 15px; font-weight: 700; letter-spacing: -.45px; }
+    .brand-sub { margin-top: 3px; color: var(--muted); font-size: 11px; letter-spacing: .1px; }
+    .profile { display: flex; align-items: center; gap: 18px; }
+    .level-box { width: 180px; }
+    .level-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .level-label { font-size: 12px; font-weight: 650; }
+    .level-count { color: var(--muted); font-size: 11px; }
+    .xp-track { height: 5px; overflow: hidden; border-radius: 8px; background: #e4e3dc; }
+    .xp-fill { width: 0%; height: 100%; background: var(--accent); border-radius: inherit; transition: width .45s ease; }
+    .profile-stat { display: flex; align-items: center; gap: 7px; font-weight: 650; font-size: 13px; white-space: nowrap; }
+    .stat-icon { font-size: 16px; }
+    .streak-icon { color: #dc815f; }
+    .icon-btn, .btn, .tab-btn, .quad-tab, .text-btn, .task-action, .close-btn {
+      border: 0; cursor: pointer; transition: .18s ease;
+    }
+    .icon-btn {
+      display: grid; place-items: center; width: 38px; height: 38px; border-radius: 13px;
+      background: var(--surface); border: 1px solid var(--line); color: #77786f;
+    }
+    .icon-btn:hover { color: var(--ink); transform: translateY(-1px); box-shadow: var(--shadow); }
+    .icon-btn svg { width: 17px; height: 17px; }
+    .mobile-profile { display: none; }
+    .greeting { margin: 54px 0 0; }
+    .eyebrow { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 1.15px; text-transform: uppercase; }
+    h1 { margin: 8px 0 7px; font-size: clamp(31px, 4vw, 44px); font-weight: 580; letter-spacing: -1.8px; line-height: 1.1; }
+    .greeting p { margin: 0; color: var(--muted); font-size: 14px; }
+    .main-nav { display: flex; gap: 8px; margin-top: 33px; padding: 5px; width: fit-content; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.55); }
+    .tab-btn { display: flex; align-items: center; gap: 8px; padding: 10px 15px; border-radius: 11px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .tab-btn:hover { color: var(--ink); }
+    .tab-btn.active { background: var(--surface); color: var(--ink); box-shadow: 0 2px 7px rgba(20,20,20,.06); }
+    .tab-icon { width: 15px; height: 15px; }
+    .page { display: none; margin-top: 25px; animation: appear .25s ease; }
+    .page.active { display: block; }
+    @keyframes appear { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 20px; }
+    .section-title { margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -.55px; }
+    .section-note { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 39px;
+      padding: 0 15px; border-radius: 12px; background: var(--accent); color: white; font-size: 12px;
+      font-weight: 650;
+    }
+    .btn:hover { background: var(--accent-strong); transform: translateY(-1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .btn svg { width: 15px; height: 15px; }
+    .btn.secondary { color: var(--ink); background: var(--surface); border: 1px solid var(--line); }
+    .btn.secondary:hover { background: var(--surface-2); }
+    .btn.small { min-height: 33px; padding: 0 11px; font-size: 11px; border-radius: 10px; }
+    .btn.ghost { background: transparent; color: var(--muted); padding: 0 8px; }
+    .btn.ghost:hover { color: var(--ink); transform: none; }
+    .matrix-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .quadrant { min-height: 198px; padding: 19px 20px 17px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .quad-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 17px; }
+    .quad-title-wrap { display: flex; align-items: center; gap: 10px; }
+    .quad-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .q1 .quad-dot { background: var(--red); }.q2 .quad-dot { background: #c9a75a; }.q3 .quad-dot { background: var(--blue); }.q4 .quad-dot { background: #a8aaa1; }
+    .quad-title { font-size: 13px; font-weight: 650; }
+    .quad-subtitle { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .quad-number { display: grid; place-items: center; min-width: 25px; height: 25px; padding: 0 6px; border-radius: 9px; background: var(--surface-2); color: var(--muted); font-size: 10px; }
+    .task-list { display: grid; gap: 8px; }
+    .task-card { display: flex; align-items: flex-start; gap: 10px; padding: 10px 10px 10px 11px; border-radius: 13px; background: #faf9f6; border: 1px solid rgba(49,51,43,.055); transition: .18s ease; }
+    .task-card:hover { border-color: rgba(82,107,81,.2); }
+    .task-check { appearance: none; flex: 0 0 auto; width: 17px; height: 17px; margin: 1px 0 0; border: 1.5px solid #c9cbc1; border-radius: 6px; cursor: pointer; position: relative; }
+    .task-check:checked { border-color: var(--accent); background: var(--accent); }
+    .task-check:checked:after { content: "✓"; position: absolute; inset: -1px 0 0; color: white; font-size: 12px; text-align: center; line-height: 17px; }
+    .task-content { flex: 1; min-width: 0; }
+    .task-title { font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+    .task-card.completed .task-title { color: #a2a39b; text-decoration: line-through; }
+    .task-meta { display: flex; align-items: center; gap: 9px; margin-top: 6px; color: #999a91; font-size: 10px; }
+    .task-action { padding: 1px 3px; background: transparent; color: #a2a39b; font-size: 10px; }
+    .task-action:hover { color: var(--accent); }
+    .empty-text { padding: 8px 2px; color: #a3a39a; font-size: 11px; }
+    .subtasks { display: grid; gap: 6px; margin: 9px 0 1px; padding: 9px 0 0; border-top: 1px solid var(--line); }
+    .subtask { display: flex; align-items: flex-start; gap: 7px; color: #73756d; font-size: 10px; line-height: 1.4; }
+    .subtask input { accent-color: var(--accent); margin: 0; }
+    .composer {
+      display: flex; gap: 10px; margin-top: 16px; padding: 10px; border-radius: 17px;
+      background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+    }
+    .field { min-width: 0; width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 11px; background: #fbfaf7; color: var(--ink); }
+    .field::placeholder { color: #a3a49b; }
+    .composer .field { flex: 1; border-color: transparent; background: transparent; }
+    .select-field { max-width: 178px; color: #6f7168; font-size: 11px; }
+    .quad-switcher { display: none; }
+    .focus-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(250px, .8fr); gap: 16px; }
+    .focus-grid.is-focused { grid-template-columns: 1fr; }
+    .focus-grid.is-focused .focus-side { display: grid; grid-template-columns: 1fr 1fr; order: -1; }
+    .focus-grid.is-focused .focus-card { order: 1; min-height: min(64vh, 600px); padding: clamp(28px, 7vw, 76px); }
+    .focus-grid.is-focused .focus-task-title { max-width: 800px; font-size: clamp(34px, 7vw, 64px); }
+    .focus-card, .mentor-card, .timer-card, .shop-form, .reward-card, .analytic-card, .metric-card {
+      border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .focus-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 330px; padding: 28px; }
+    .focus-card-top { display: flex; align-items: center; justify-content: space-between; }
+    .focus-kicker { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .75px; text-transform: uppercase; }
+    .focus-badge { padding: 7px 10px; border-radius: 9px; background: #f6ece8; color: #af685c; font-size: 10px; font-weight: 650; }
+    .focus-empty { max-width: 380px; padding: 25px 0; }
+    .focus-empty h3, .focus-task-title { margin: 0; font-size: clamp(23px, 3vw, 32px); font-weight: 580; letter-spacing: -1.05px; line-height: 1.2; }
+    .focus-empty p { max-width: 310px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .focus-task-desc { color: var(--muted); font-size: 12px; }
+    .focus-footer { display: flex; align-items: center; gap: 11px; }
+    .focus-side { display: grid; gap: 15px; }
+    .mentor-card { padding: 19px; background: linear-gradient(135deg, #eef1e8, #f8f7f1); }
+    .mentor-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 650; }
+    .mentor-title span { font-size: 15px; }
+    .mentor-quote { margin: 13px 0 0; color: #5d6556; font-size: 12px; line-height: 1.65; }
+    .mentor-refresh { margin-top: 10px; }
+    .timer-card { padding: 20px; }
+    .timer-head { display: flex; justify-content: space-between; align-items: center; }
+    .timer-title { font-size: 12px; font-weight: 650; }
+    .timer-mode { color: var(--muted); font-size: 10px; }
+    .timer-ring { position: relative; display: grid; place-items: center; width: 132px; height: 132px; margin: 19px auto; border-radius: 50%; background: conic-gradient(var(--accent) var(--progress, 0%), #eeeee8 0); }
+    .timer-ring:before { content: ""; position: absolute; inset: 7px; border-radius: inherit; background: var(--surface); }
+    .timer-time { position: relative; font-size: 30px; font-weight: 570; letter-spacing: -1.3px; font-variant-numeric: tabular-nums; }
+    .timer-controls { display: flex; justify-content: center; gap: 8px; }
+    .timer-controls .btn { min-width: 82px; }
+    .shop-layout { display: grid; grid-template-columns: minmax(250px, .72fr) minmax(0, 1.28fr); gap: 17px; align-items: start; }
+    .shop-form { padding: 21px; }
+    .form-title { margin: 0 0 5px; font-size: 14px; font-weight: 650; }
+    .form-note { margin: 0 0 17px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .shop-input-row { display: flex; gap: 8px; }
+    .shop-input-row .field { flex: 1; }
+    .price-suggest { margin-top: 11px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .reward-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .reward-card { padding: 17px; }
+    .reward-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .reward-emoji { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 13px; background: #f5f1e6; font-size: 19px; }
+    .reward-price { display: flex; align-items: center; gap: 4px; color: #b17d2b; font-size: 12px; font-weight: 700; }
+    .reward-name { margin: 15px 0 5px; font-size: 13px; font-weight: 650; }
+    .reward-desc { min-height: 30px; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .reward-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 14px; }
+    .reward-footer .btn { min-height: 32px; }
+    .delete-reward { width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: #a0a097; cursor: pointer; }
+    .delete-reward:hover { color: var(--red); background: #fbefec; }
+    .empty-shop { grid-column: 1/-1; padding: 35px; text-align: center; color: var(--muted); font-size: 12px; }
+    .analytics-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 15px; }
+    .metric-card { padding: 17px 19px; }
+    .metric-label { color: var(--muted); font-size: 10px; }
+    .metric-value { margin-top: 9px; font-size: 25px; font-weight: 600; letter-spacing: -.9px; }
+    .metric-caption { margin-top: 5px; color: #9b9c93; font-size: 10px; }
+    .analytics-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 15px; }
+    .analytic-card { min-height: 230px; padding: 20px; }
+    .analytic-title { margin: 0; font-size: 12px; font-weight: 650; }
+    .analytic-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 10px; }
+    .bar-chart { display: flex; align-items: end; justify-content: space-around; height: 136px; gap: 12px; margin-top: 15px; padding: 0 4px; border-bottom: 1px solid var(--line); }
+    .bar-wrap { display: flex; flex: 1; align-items: center; flex-direction: column; justify-content: end; height: 100%; gap: 7px; }
+    .bar-value { color: var(--muted); font-size: 9px; }
+    .bar { width: min(26px, 70%); min-height: 3px; border-radius: 7px 7px 2px 2px; background: #a7b49d; transition: height .35s ease; }
+    .bar.today { background: var(--accent); }
+    .bar-label { padding-top: 8px; color: var(--muted); font-size: 9px; }
+    .distribution { display: flex; align-items: center; gap: 23px; margin-top: 22px; }
+    .donut { display: grid; place-items: center; flex: 0 0 auto; width: 122px; height: 122px; border-radius: 50%; background: conic-gradient(#cf766d 0 25%, #d1b15e 25% 50%, #7891a8 50% 75%, #b0b1a9 75% 100%); }
+    .donut:before { content: ""; grid-area: 1/1; width: 82px; height: 82px; border-radius: 50%; background: var(--surface); }
+    .donut-center { z-index: 1; grid-area: 1/1; text-align: center; }
+    .donut-number { font-size: 21px; font-weight: 650; }
+    .donut-label { color: var(--muted); font-size: 9px; }
+    .legend { display: grid; gap: 11px; }
+    .legend-item { display: flex; align-items: center; gap: 7px; color: #77786f; font-size: 10px; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 3px; }
+    .toast {
+      position: fixed; z-index: 30; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px);
+      max-width: calc(100vw - 32px); padding: 12px 17px; border-radius: 13px; background: #282a25; color: white;
+      box-shadow: 0 8px 30px rgba(0,0,0,.2); font-size: 12px; opacity: 0; pointer-events: none; transition: .24s ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(31,32,28,.28); backdrop-filter: blur(5px); }
+    .modal-backdrop.open { display: flex; }
+    .settings-modal { width: min(430px, 100%); padding: 23px; border: 1px solid var(--line); border-radius: 23px; background: var(--surface); box-shadow: 0 24px 80px rgba(0,0,0,.2); animation: appear .18s ease; }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .modal-title { margin: 0; font-size: 17px; font-weight: 650; }
+    .close-btn { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 10px; background: var(--surface-2); color: var(--muted); font-size: 18px; }
+    .setting-group { margin: 17px 0; }
+    .setting-label { display: block; margin-bottom: 8px; font-size: 11px; font-weight: 650; }
+    .setting-hint { margin: 7px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .theme-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .theme-choice { display: flex; flex-direction: column; gap: 7px; padding: 10px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); cursor: pointer; text-align: left; }
+    .theme-choice.selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+    .theme-preview { height: 42px; border-radius: 8px; background: #f0efe9; position: relative; overflow: hidden; }
+    .theme-preview:before, .theme-preview:after { content: ""; position: absolute; width: 46%; height: 18px; border-radius: 6px; background: #fffefa; top: 7px; left: 7px; }
+    .theme-preview:after { top: 27px; width: 66%; height: 8px; background: #d7dfd1; }
+    .theme-choice.glass .theme-preview { background: linear-gradient(135deg,#bfcdd1,#d7dce0 50%,#c9d7ce); }
+    .theme-choice.glass .theme-preview:before { background: rgba(255,255,255,.48); border: 1px solid rgba(255,255,255,.65); backdrop-filter: blur(8px); }
+    .theme-choice.glass .theme-preview:after { background: rgba(255,255,255,.3); }
+    .theme-choice strong { font-size: 10px; }
+    .modal-actions { display: flex; justify-content: flex-end; margin-top: 21px; }
+    .glass-mode {
+      --bg: #e9edef; --surface: rgba(255,255,255,.56); --surface-2: rgba(255,255,255,.48);
+      --line: rgba(255,255,255,.62); --ink: #253035; --muted: #6f7b80; --accent: #536f70;
+      --accent-strong: #3d5b5c; --accent-soft: #dbe6e3; --shadow: 0 14px 42px rgba(61,79,85,.11);
+      background:
+        radial-gradient(ellipse at 8% 1%, rgba(197,216,214,.72), transparent 34rem),
+        radial-gradient(ellipse at 95% 25%, rgba(206,207,224,.54), transparent 30rem), #e9edef;
+    }
+    .glass-mode .quadrant, .glass-mode .focus-card, .glass-mode .mentor-card, .glass-mode .timer-card,
+    .glass-mode .shop-form, .glass-mode .reward-card, .glass-mode .analytic-card, .glass-mode .metric-card,
+    .glass-mode .composer, .glass-mode .main-nav, .glass-mode .icon-btn, .glass-mode .settings-modal {
+      backdrop-filter: blur(22px) saturate(145%); -webkit-backdrop-filter: blur(22px) saturate(145%);
+    }
+    .glass-mode .quadrant, .glass-mode .focus-card, .glass-mode .timer-card, .glass-mode .shop-form,
+    .glass-mode .reward-card, .glass-mode .analytic-card, .glass-mode .metric-card { background: rgba(255,255,255,.55); }
+    .glass-mode .task-card { background: rgba(255,255,255,.42); border-color: rgba(255,255,255,.7); }
+    .glass-mode .mentor-card { background: linear-gradient(135deg,rgba(255,255,255,.7),rgba(221,234,230,.62)); }
+    .glass-mode .field { background: rgba(255,255,255,.42); border-color: rgba(255,255,255,.7); }
+    .confetti { position: fixed; z-index: 40; top: -15px; width: 8px; height: 12px; pointer-events: none; animation: fall 1.7s ease-in forwards; }
+    @keyframes fall { to { transform: translateY(110vh) rotate(740deg); opacity: 0; } }
+    @media (max-width: 800px) {
+      .app-shell { padding: 25px 28px 110px; }
+      .greeting { margin-top: 43px; }
+      .focus-grid { grid-template-columns: 1fr; }
+      .focus-side { grid-template-columns: 1fr 1fr; }
+      .shop-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      body { font-size: 13px; }
+      .app-shell { padding: 17px 17px calc(100px + env(safe-area-inset-bottom)); }
+      .topbar { align-items: flex-start; }
+      .brand { min-width: 0; gap: 9px; }
+      .brand-mark { width: 36px; height: 36px; border-radius: 12px; }
+      .brand-name { font-size: 14px; }
+      .brand-sub { font-size: 10px; }
+      .profile { display: none; }
+      .mobile-profile { display: flex; justify-content: space-between; align-items: center; gap: 11px; margin-top: 20px; padding: 13px 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+      .mobile-level { flex: 1; }
+      .mobile-level .level-box { width: 100%; }
+      .mobile-profile .profile-stat { font-size: 11px; }
+      .mobile-profile .stat-icon { font-size: 14px; }
+      .greeting { margin-top: 32px; }
+      h1 { margin-top: 7px; font-size: 34px; letter-spacing: -1.4px; }
+      .greeting p { font-size: 12px; }
+      .main-nav { position: fixed; z-index: 12; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; width: auto; margin: 0; padding: 6px; border: 1px solid rgba(255,255,255,.7); border-radius: 19px; background: rgba(250,249,246,.88); box-shadow: 0 8px 28px rgba(35,37,31,.13); backdrop-filter: blur(22px); }
+      .tab-btn { min-width: 0; flex-direction: column; gap: 4px; padding: 7px 2px; border-radius: 12px; font-size: 9px; }
+      .tab-icon { width: 18px; height: 18px; }
+      .page { margin-top: 20px; }
+      .section-head { align-items: flex-start; margin-bottom: 14px; }
+      .section-title { font-size: 17px; }
+      .section-note { max-width: 235px; font-size: 10px; line-height: 1.45; }
+      .section-head > .btn { min-height: 35px; padding: 0 10px; font-size: 10px; }
+      .matrix-grid { grid-template-columns: 1fr; gap: 11px; }
+      .quadrant { display: none; min-height: 170px; padding: 16px; border-radius: 18px; }
+      .quadrant.mobile-active { display: block; }
+      .quad-switcher { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0 0 10px; }
+      .quad-tab { min-height: 35px; padding: 0 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--muted); font-size: 10px; }
+      .quad-tab.active { border-color: transparent; background: #e7eee3; color: var(--accent-strong); font-weight: 700; }
+      .composer { flex-wrap: wrap; gap: 7px; padding: 8px; }
+      .composer .field { flex-basis: 100%; height: 38px; }
+      .select-field { flex: 1; max-width: none; }
+      .focus-card { min-height: 285px; padding: 21px; border-radius: 19px; }
+      .focus-side { grid-template-columns: 1fr; }
+      .focus-grid.is-focused .focus-side { grid-template-columns: 1fr; }
+      .mentor-card, .timer-card { border-radius: 18px; }
+      .reward-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .reward-card { padding: 12px; border-radius: 17px; }
+      .reward-emoji { width: 33px; height: 33px; font-size: 16px; }
+      .reward-name { margin-top: 11px; font-size: 11px; }
+      .reward-desc { font-size: 9px; }
+      .reward-footer { margin-top: 11px; }
+      .reward-footer .btn { min-height: 30px; padding: 0 8px; font-size: 10px; }
+      .analytics-top { gap: 7px; }
+      .metric-card { padding: 12px; border-radius: 16px; }
+      .metric-label { font-size: 9px; }
+      .metric-value { margin-top: 7px; font-size: 21px; }
+      .metric-caption { font-size: 9px; }
+      .analytics-grid { grid-template-columns: 1fr; gap: 10px; }
+      .analytic-card { min-height: 210px; padding: 16px; border-radius: 18px; }
+      .bar-chart { height: 125px; }
+      .distribution { justify-content: center; gap: 26px; }
+      .donut { width: 112px; height: 112px; }
+      .donut:before { width: 76px; height: 76px; }
+      .settings-modal { padding: 19px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *:before, *:after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+    /* Workspace refresh: quieter surfaces, firmer hierarchy, and a persistent rail. */
+    :root {
+      color-scheme: light;
+      --bg: #f4f2ed;
+      --surface: #fbfaf7;
+      --surface-2: #efede7;
+      --ink: #26251f;
+      --muted: #858178;
+      --line: #e4e0d8;
+      --accent: #4d614a;
+      --accent-strong: #3c4e39;
+      --accent-soft: #e6e9e1;
+      --gold: #a97833;
+      --red: #b96d5f;
+      --blue: #668293;
+      --shadow: none;
+      --radius: 15px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body { background: var(--bg); color: var(--ink); font-size: 14px; }
+    button, input, select { font-family: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+    .app-shell { width: 100%; max-width: 1440px; padding: 48px clamp(30px, 5vw, 76px) 64px 320px; }
+    .topbar {
+      position: fixed; z-index: 13; inset-block: 0; left: max(0px, calc((100vw - 1440px) / 2));
+      display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start;
+      width: 248px; padding: 27px 18px 20px; border-right: 1px solid var(--line); background: var(--bg);
+    }
+    .brand { min-width: 0; gap: 10px; padding: 3px 5px; }
+    .brand-mark { width: 33px; height: 33px; border-radius: 10px; background: var(--accent); box-shadow: none; }
+    .brand-mark svg { width: 18px; height: 18px; }
+    .brand-name { font-size: 14px; font-weight: 680; letter-spacing: -.35px; }
+    .brand-sub { margin-top: 3px; color: var(--muted); font-size: 10px; letter-spacing: .15px; }
+    .profile {
+      display: grid; grid-template-columns: minmax(0, 1fr) 36px 36px; align-items: center; gap: 14px 8px;
+      margin-top: auto; padding: 17px 4px 0; border-top: 1px solid var(--line);
+    }
+    .level-box { grid-column: 1 / -1; width: auto; }
+    .level-line { margin-bottom: 9px; }
+    .level-label { font-size: 11px; font-weight: 620; }
+    .level-count { font-size: 10px; }
+    .xp-track { height: 4px; background: var(--surface-2); }
+    .profile-stat { gap: 6px; color: var(--muted); font-size: 11px; }
+    .stat-icon { color: var(--accent); font-size: 13px; }
+    .streak-icon { color: var(--red); }
+    .icon-btn {
+      width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line);
+      background: var(--surface); color: var(--muted); box-shadow: none;
+    }
+    .icon-btn:hover { color: var(--ink); transform: none; box-shadow: none; border-color: var(--muted); }
+    .icon-btn svg { width: 16px; height: 16px; }
+    .theme-toggle { font-size: 16px; line-height: 1; }
+    .mobile-profile { display: none; }
+    .main-nav {
+      position: fixed; z-index: 12; top: 116px; left: max(12px, calc((100vw - 1440px) / 2 + 12px));
+      display: flex; flex-direction: column; align-items: stretch; gap: 3px; width: 224px;
+      margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent;
+    }
+    .tab-btn {
+      min-height: 40px; justify-content: flex-start; gap: 12px; padding: 0 11px; border-radius: 9px;
+      color: var(--muted); font-size: 12px; font-weight: 560;
+    }
+    .tab-btn:hover { color: var(--ink); background: var(--surface-2); }
+    .tab-btn.active { color: var(--ink); background: var(--surface-2); box-shadow: none; }
+    .tab-icon { width: 16px; height: 16px; }
+    .greeting { margin: 0; }
+    .eyebrow { font-size: 10px; font-weight: 620; letter-spacing: 1.05px; }
+    h1 { margin: 12px 0 8px; font-size: clamp(36px, 4vw, 48px); font-weight: 560; letter-spacing: -1.9px; }
+    .greeting p { color: var(--muted); font-size: 13px; }
+    .page { margin-top: 49px; }
+    .section-head { align-items: center; margin-bottom: 17px; }
+    .section-title { font-size: 18px; font-weight: 640; letter-spacing: -.45px; }
+    .section-note { margin-top: 5px; font-size: 11px; }
+    .btn { min-height: 37px; padding: 0 13px; border-radius: 9px; background: var(--accent); font-size: 11px; font-weight: 620; }
+    .btn:hover { background: var(--accent-strong); transform: none; }
+    .btn.secondary { background: var(--surface); border-color: var(--line); }
+    .btn.secondary:hover { background: var(--surface-2); }
+    .btn.small { min-height: 31px; border-radius: 8px; }
+    .btn.ghost { color: var(--muted); }
+    .matrix-grid { gap: 12px; }
+    .quadrant, .focus-card, .mentor-card, .timer-card, .shop-form, .reward-card, .analytic-card, .metric-card {
+      border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: none;
+    }
+    .quadrant { min-height: 180px; padding: 17px 17px 15px; }
+    .quad-head { margin-bottom: 13px; }
+    .quad-title-wrap { gap: 9px; }
+    .quad-dot { width: 7px; height: 7px; }
+    .quad-title { font-size: 12px; font-weight: 640; }
+    .quad-subtitle { font-size: 10px; }
+    .quad-number { min-width: 23px; height: 23px; border-radius: 7px; background: var(--surface-2); }
+    .task-list { gap: 0; }
+    .task-card { gap: 10px; padding: 11px 3px; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: transparent; }
+    .task-card:hover { border-color: var(--line); }
+    .task-check { width: 16px; height: 16px; border-radius: 50%; border-color: #b7b5ac; }
+    .task-check:checked:after { font-size: 10px; line-height: 15px; }
+    .task-title { font-size: 12px; line-height: 1.5; }
+    .task-card.completed .task-title { color: var(--muted); }
+    .task-meta { flex-wrap: wrap; gap: 8px; margin-top: 5px; color: var(--muted); font-size: 9px; }
+    .task-action { color: var(--accent); font-size: 10px; }
+    .empty-text { padding: 6px 0 2px; color: var(--muted); font-size: 11px; }
+    .subtasks { border-color: var(--line); }
+    .subtask { color: var(--muted); }
+    .composer { gap: 8px; margin-top: 14px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: none; }
+    .field { height: 38px; border-color: var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 12px; }
+    .field::placeholder { color: var(--muted); }
+    .composer .field { background: transparent; }
+    .select-field { color: var(--muted); font-size: 10px; }
+    .focus-grid { gap: 12px; }
+    .focus-grid.is-focused .focus-card { border-color: var(--line); }
+    .focus-card { min-height: 310px; padding: 24px; }
+    .focus-kicker { font-size: 10px; letter-spacing: .8px; }
+    .focus-badge { padding: 6px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-size: 9px; }
+    .focus-empty h3, .focus-task-title { font-weight: 560; }
+    .focus-empty p { color: var(--muted); font-size: 12px; }
+    .focus-task-desc { color: var(--muted); font-size: 11px; }
+    .focus-side { gap: 12px; }
+    .mentor-card { padding: 17px; background: var(--surface); }
+    .mentor-title { font-size: 11px; font-weight: 640; }
+    .mentor-title span { color: var(--accent); }
+    .mentor-quote { margin: 11px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .timer-card { padding: 17px; }
+    .timer-title { font-size: 11px; font-weight: 640; }
+    .timer-mode { font-size: 10px; }
+    .timer-ring { width: 118px; height: 118px; margin: 17px auto; background: conic-gradient(var(--accent) var(--progress, 0%), var(--surface-2) 0); }
+    .timer-ring:before { background: var(--surface); }
+    .timer-time { font-size: 28px; }
+    .shop-layout { gap: 13px; }
+    .shop-form { padding: 18px; }
+    .form-title { font-size: 13px; }
+    .form-note, .price-suggest { color: var(--muted); font-size: 10px; }
+    .reward-grid { gap: 10px; }
+    .reward-card { padding: 15px; }
+    .reward-emoji { width: 34px; height: 34px; border-radius: 9px; background: var(--surface-2); font-size: 17px; }
+    .reward-price { color: var(--gold); font-size: 11px; }
+    .reward-name { margin: 12px 0 5px; font-size: 12px; }
+    .reward-desc { color: var(--muted); font-size: 10px; }
+    .delete-reward { color: var(--muted); }
+    .analytics-top { gap: 10px; margin-bottom: 12px; }
+    .metric-card { padding: 15px 17px; }
+    .metric-label, .metric-caption { color: var(--muted); font-size: 10px; }
+    .metric-value { margin-top: 8px; font-size: 24px; }
+    .analytics-grid { gap: 12px; }
+    .analytic-card { min-height: 220px; padding: 18px; }
+    .analytic-title { font-size: 11px; font-weight: 640; }
+    .analytic-subtitle { color: var(--muted); }
+    .bar { background: color-mix(in srgb, var(--accent) 38%, var(--surface-2)); }
+    .bar.today { background: var(--accent); }
+    .bar-chart { border-color: var(--line); }
+    .distribution { gap: 18px; }
+    .legend-item { color: var(--muted); }
+    .modal-backdrop { background: rgba(20, 20, 18, .42); backdrop-filter: blur(3px); }
+    .settings-modal { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 24px 80px rgba(0,0,0,.16); }
+    .modal-title { font-size: 16px; }
+    .setting-label { font-size: 11px; }
+    .setting-hint { color: var(--muted); }
+    .theme-choices { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+    .theme-choice { flex: 1; align-items: center; justify-content: center; min-height: 34px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; text-align: center; }
+    .theme-choice.selected { background: var(--surface); box-shadow: 0 1px 3px rgba(20,20,18,.1); }
+    .theme-preview { display: none; }
+    .theme-choice strong { font-size: 11px; font-weight: 590; }
+    .close-btn { border-radius: 8px; background: var(--surface-2); }
+    .toast { border-radius: 9px; }
+    .quad-switcher { gap: 5px; }
+    .quad-tab { border-radius: 7px; background: var(--surface); color: var(--muted); }
+    .quad-tab.active { background: var(--accent-soft); color: var(--accent-strong); }
+    body.theme-dark {
+      color-scheme: dark;
+      --bg: #191a18;
+      --surface: #21221f;
+      --surface-2: #292a26;
+      --ink: #ecebe5;
+      --muted: #a09e94;
+      --line: #363732;
+      --accent: #a4b39b;
+      --accent-strong: #c2cfb8;
+      --accent-soft: #2f372e;
+      --gold: #d7ae6f;
+      --red: #d38a78;
+      --blue: #8eabb8;
+      --shadow: none;
+      background: var(--bg);
+    }
+    body.theme-dark .topbar { background: var(--bg); }
+    body.theme-dark .focus-badge { background: #332925; color: #db9d88; }
+    body.theme-dark .task-check { border-color: #62635b; }
+    body.theme-dark .task-check:checked { border-color: var(--accent); background: var(--accent); }
+    body.theme-dark .task-check:checked:after { color: #1b2019; }
+    body.theme-dark .theme-choice.selected { box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+    body.theme-dark .modal-backdrop { background: rgba(0,0,0,.56); }
+    body.theme-dark .toast { background: #e8e6de; color: #23241f; }
+    body.theme-dark .confetti { filter: saturate(.8); }
+    @media (max-width: 800px) {
+      .app-shell { padding: 22px 26px calc(96px + env(safe-area-inset-bottom)); }
+      .topbar {
+        position: relative; inset: auto; left: auto; width: auto; height: auto; flex-direction: row;
+        align-items: center; justify-content: space-between; padding: 0; border: 0; background: transparent;
+      }
+      .profile { display: none; }
+      .mobile-profile { display: flex; }
+      .main-nav {
+        position: fixed; top: auto; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); left: 12px;
+        display: grid; grid-template-columns: repeat(4, 1fr); flex-direction: row; gap: 1px; width: auto;
+        margin: 0; padding: 5px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface);
+        box-shadow: 0 5px 20px rgba(0,0,0,.09);
+      }
+      .tab-btn { min-height: 42px; justify-content: center; gap: 7px; padding: 0 7px; }
+      .tab-btn.active { background: var(--surface-2); }
+      .greeting { margin-top: 31px; }
+      .page { margin-top: 34px; }
+      .focus-grid { grid-template-columns: minmax(0, 1.4fr) minmax(230px, .8fr); }
+      .focus-grid.is-focused { grid-template-columns: 1fr; }
+      .focus-grid.is-focused .focus-side { grid-template-columns: 1fr 1fr; }
+      .shop-layout { grid-template-columns: minmax(230px, .72fr) minmax(0, 1.28fr); }
+      .analytics-grid { grid-template-columns: 1.4fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .app-shell { padding: 17px 17px calc(94px + env(safe-area-inset-bottom)); }
+      .mobile-profile { margin-top: 16px; padding: 11px 12px; border-radius: 11px; background: var(--surface); }
+      .mobile-profile .profile-stat { font-size: 10px; }
+      .mobile-profile .icon-btn { width: 32px; height: 32px; }
+      .greeting { margin-top: 29px; }
+      h1 { margin: 8px 0 7px; font-size: 35px; letter-spacing: -1.5px; }
+      .greeting p { font-size: 12px; }
+      .page { margin-top: 28px; }
+      .section-head { align-items: flex-start; margin-bottom: 14px; }
+      .section-note { max-width: 235px; font-size: 10px; }
+      .section-head > .btn { min-height: 33px; font-size: 10px; }
+      .matrix-grid { gap: 9px; }
+      .quadrant { min-height: 160px; padding: 14px; }
+      .quad-switcher { margin-bottom: 9px; }
+      .quad-tab { min-height: 34px; padding: 0 3px; font-size: 9px; }
+      .composer { flex-wrap: wrap; gap: 6px; }
+      .composer .field { flex-basis: 100%; height: 37px; }
+      .select-field { flex: 1; max-width: none; }
+      .focus-grid { grid-template-columns: 1fr; }
+      .focus-grid.is-focused .focus-side { grid-template-columns: 1fr; }
+      .focus-card { min-height: 270px; padding: 20px; }
+      .focus-grid.is-focused .focus-card { min-height: 48vh; padding: 24px; }
+      .focus-grid.is-focused .focus-task-title { font-size: clamp(32px, 8vw, 48px); }
+      .focus-side { grid-template-columns: 1fr; }
+      .shop-layout { grid-template-columns: 1fr; }
+      .reward-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .reward-card { padding: 12px; }
+      .reward-name { font-size: 11px; }
+      .analytics-top { gap: 7px; }
+      .metric-card { padding: 11px; }
+      .metric-label, .metric-caption { font-size: 9px; }
+      .metric-value { font-size: 20px; }
+      .analytics-grid { grid-template-columns: 1fr; gap: 9px; }
+      .analytic-card { min-height: 205px; padding: 15px; }
+      .distribution { justify-content: center; gap: 20px; }
+      .donut { width: 106px; height: 106px; }
+      .donut:before { width: 72px; height: 72px; }
+      .settings-modal { padding: 18px; }
+    }
+    @media (max-width: 360px) {
+      .app-shell { padding-right: 13px; padding-left: 13px; }
+      .brand-sub { display: none; }
+      .mobile-profile { gap: 7px; }
+      .mobile-profile .profile-stat { gap: 3px; }
+      .tab-btn { gap: 4px; font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell" id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M6 12.5 10 16l8-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2.8a9.2 9.2 0 1 0 9.2 9.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div><div class="brand-name">Task Matrix</div><div class="brand-sub">пространство для ясности</div></div>
+      </div>
+      <div class="profile" aria-label="Профиль">
+        <div class="level-box"><div class="level-line"><span class="level-label" id="level-desktop">Уровень 1</span><span class="level-count" id="xp-desktop">0 / 100 XP</span></div><div class="xp-track"><div class="xp-fill" id="xp-fill-desktop"></div></div></div>
+        <div class="profile-stat"><span class="stat-icon">◉</span><span id="coins-desktop">0</span><span>монет</span></div>
+        <div class="profile-stat"><span class="stat-icon streak-icon">♨</span><span id="streak-desktop">0</span><span>дней</span></div>
+        <button class="icon-btn theme-toggle" type="button" aria-label="Включить тёмную тему" title="Тема оформления">◐</button>
+        <button class="icon-btn settings-open" aria-label="Настройки" title="Настройки">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 8.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z" stroke="currentColor" stroke-width="1.6"/><path d="m19.2 13.4 1.1.8-1.4 2.5-1.3-.5a7.7 7.7 0 0 1-1.5.9l-.2 1.4h-2.9l-.3-1.4a7.7 7.7 0 0 1-1.5-.9l-1.3.5-1.4-2.5 1.1-.8a7.5 7.5 0 0 1 0-1.8l-1.1-.8 1.4-2.5 1.3.5a7.7 7.7 0 0 1 1.5-.9l.3-1.4h2.9l.2 1.4a7.7 7.7 0 0 1 1.5.9l1.3-.5 1.4 2.5-1.1.8a7.5 7.5 0 0 1 0 1.8Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" transform="translate(-1.7 -1.3)"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="mobile-profile">
+      <div class="mobile-level"><div class="level-box"><div class="level-line"><span class="level-label" id="level-mobile">Уровень 1</span><span class="level-count" id="xp-mobile">0 / 100 XP</span></div><div class="xp-track"><div class="xp-fill" id="xp-fill-mobile"></div></div></div></div>
+      <div class="profile-stat"><span class="stat-icon">◉</span><span id="coins-mobile">0</span></div>
+      <div class="profile-stat"><span class="stat-icon streak-icon">♨</span><span id="streak-mobile">0</span></div>
+      <button class="icon-btn theme-toggle" type="button" aria-label="Включить тёмную тему" title="Тема оформления">◐</button>
+      <button class="icon-btn settings-open" aria-label="Настройки"><svg viewBox="0 0 24 24" fill="none"><path d="M12 8.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z" stroke="currentColor" stroke-width="1.6"/><path d="m19 13 1 .8-1.3 2.3-1.3-.5a6 6 0 0 1-1.4.8l-.2 1.3h-2.7l-.2-1.3a6 6 0 0 1-1.4-.8l-1.2.5-1.3-2.3 1-.8a6 6 0 0 1 0-1.6l-1-.8 1.3-2.3 1.2.5a6 6 0 0 1 1.4-.8l.2-1.3h2.7l.2 1.3a6 6 0 0 1 1.4.8l1.3-.5 1.3 2.3-1 .8a6 6 0 0 1 0 1.6Z" stroke="currentColor" stroke-width="1.3" transform="translate(-1.2 -1)"/></svg></button>
+    </div>
+    <section class="greeting">
+      <div class="eyebrow" id="today-label">ПЛАН НА СЕГОДНЯ</div>
+      <h1 id="greeting-title">Сначала важное.</h1>
+      <p>Четыре приоритета. Один понятный следующий шаг.</p>
+    </section>
+    <nav class="main-nav" aria-label="Разделы">
+      <button class="tab-btn active" data-page="matrix"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="2.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11.5" y="2.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="2.5" y="11.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11.5" y="11.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Матрица</span></button>
+      <button class="tab-btn" data-page="focus"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M10 1.5v3M18.5 10h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Фокус</span></button>
+      <button class="tab-btn" data-page="shop"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><path d="M3 7h14l-1.2 10H4.2L3 7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7 7a3 3 0 0 1 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Награды</span></button>
+      <button class="tab-btn" data-page="analytics"><svg class="tab-icon" viewBox="0 0 20 20" fill="none"><path d="M3 16.5V10m7 6.5V4m7 12.5V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M1.5 18h17" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg><span>Итоги</span></button>
+    </nav>
+    <main>
+      <section class="page active" id="page-matrix">
+        <div class="section-head"><div><h2 class="section-title">Матрица приоритетов</h2><p class="section-note">Распредели задачи по важности и срочности.</p></div><button class="btn ghost" data-goto="focus">Открыть фокус <span aria-hidden="true">↗</span></button></div>
+        <div class="quad-switcher" role="tablist" aria-label="Выбрать квадрант">
+          <button class="quad-tab active" data-quadrant="q1">Срочно</button><button class="quad-tab" data-quadrant="q2">Важно</button><button class="quad-tab" data-quadrant="q3">Быстро</button><button class="quad-tab" data-quadrant="q4">Позже</button>
+        </div>
+        <div class="matrix-grid">
+          <article class="quadrant q1 mobile-active" data-q="q1"><div class="quad-head"><div class="quad-title-wrap"><span class="quad-dot"></span><div><div class="quad-title">Срочно и важно</div><span class="quad-subtitle">Высокий приоритет · 40 XP · 40 монет</span></div></div><span class="quad-number" data-count="q1">0</span></div><div class="task-list" data-list="q1"></div></article>
+          <article class="quadrant q2" data-q="q2"><div class="quad-head"><div class="quad-title-wrap"><span class="quad-dot"></span><div><div class="quad-title">Важно, не срочно</div><span class="quad-subtitle">Долгосрочные цели · 30 XP · 25 монет</span></div></div><span class="quad-number" data-count="q2">0</span></div><div class="task-list" data-list="q2"></div></article>
+          <article class="quadrant q3" data-q="q3"><div class="quad-head"><div class="quad-title-wrap"><span class="quad-dot"></span><div><div class="quad-title">Срочно, не важно</div><span class="quad-subtitle">Быстрые дела · 15 XP · 15 монет</span></div></div><span class="quad-number" data-count="q3">0</span><div class="task-list" data-list="q3"></div></article>
+          <article class="quadrant q4" data-q="q4"><div class="quad-head"><div class="quad-title-wrap"><span class="quad-dot"></span><div><div class="quad-title">Не срочно, не важно</div><span class="quad-subtitle">Можно отложить · 10 XP · 8 монет</span></div></div><span class="quad-number" data-count="q4">0</span><div class="task-list" data-list="q4"></div></article>
+        </div>
+        <form class="composer" id="task-form">
+          <input class="field" id="task-input" type="text" maxlength="120" placeholder="Что нужно сделать?" autocomplete="off" aria-label="Новая задача" required>
+          <select class="field select-field" id="task-quadrant" aria-label="Приоритет задачи"><option value="q1">Срочно и важно</option><option value="q2">Важно, не срочно</option><option value="q3">Срочно, не важно</option><option value="q4">Не срочно, не важно</option></select>
+          <button class="btn" type="submit"><span>＋</span> Добавить задачу</button>
+        </form>
+      </section>
+      <section class="page" id="page-focus">
+        <div class="section-head"><div><h2 class="section-title">Время для важного</h2><p class="section-note">Сузь внимание до одного следующего шага.</p></div></div>
+        <div class="focus-grid" id="focus-grid">
+          <article class="focus-card" id="focus-card">
+            <div class="focus-card-top"><span class="focus-kicker">Твоя точка фокуса</span><span class="focus-badge" id="focus-priority">ГОТОВ К СТАРТУ</span></div>
+            <div class="focus-empty" id="focus-content"><h3>Освободи место для главного.</h3><p>Нажми кнопку — я выберу задачу, которая заслуживает твоего внимания сейчас.</p></div>
+            <div class="focus-footer"><button class="btn" id="choose-focus">✦ Что делать сейчас?</button><button class="btn secondary" id="finish-focus" hidden>Отметить готовой ✓</button></div>
+          </article>
+          <div class="focus-side">
+            <article class="mentor-card"><div class="mentor-title"><span>✳</span> Поддержка на сегодня</div><p class="mentor-quote" id="mentor-quote">Тебе не нужно видеть всю лестницу. Достаточно сделать следующий шаг.</p><button class="btn ghost small mentor-refresh" id="refresh-mentor">Получить совет от AI ↗</button></article>
+            <article class="timer-card"><div class="timer-head"><span class="timer-title">⏱ Помодоро</span><span class="timer-mode" id="timer-mode">25 мин работы</span></div><div class="timer-ring" id="timer-ring"><div class="timer-time" id="timer-time">25:00</div></div><div class="timer-controls"><button class="btn" id="timer-start">Старт</button><button class="btn secondary" id="timer-reset">Сброс</button></div></article>
+          </div>
+        </div>
+      </section>
+      <section class="page" id="page-shop">
+        <div class="section-head"><div><h2 class="section-title">Награды</h2><p class="section-note">Выбери, на что копишь монеты.</p></div><div class="profile-stat"><span>◉</span><strong id="shop-coins">0</strong><span>монет</span></div></div>
+        <div class="shop-layout">
+          <form class="shop-form" id="reward-form"><h3 class="form-title">Добавить награду</h3><p class="form-note">Придумай, чем хочешь себя порадовать.</p><input class="field" id="reward-input" type="text" maxlength="60" placeholder="Например, час любимой игры" required><div class="shop-input-row" style="margin-top:9px"><input class="field" id="reward-price" type="number" min="30" max="500" placeholder="Цена в монетах" required><button class="btn secondary small" type="button" id="estimate-price">🤖 Оценить</button></div><p class="price-suggest" id="price-hint">Стоимость от 30 до 500 монет — придумай сам или доверь оценку AI.</p><button class="btn" type="submit" style="width:100%;margin-top:13px">＋ Добавить награду</button></form>
+          <div class="reward-grid" id="reward-list"></div>
+        </div>
+      </section>
+      <section class="page" id="page-analytics">
+        <div class="section-head"><div><h2 class="section-title">Статистика</h2><p class="section-note">Задачи, награды и устойчивый ритм.</p></div></div>
+        <div class="analytics-top">
+          <article class="metric-card"><div class="metric-label">Выполнено задач</div><div class="metric-value" id="metric-tasks">0</div><div class="metric-caption">за всё время</div></article>
+          <article class="metric-card"><div class="metric-label">Заработано монет</div><div class="metric-value" id="metric-earned">0</div><div class="metric-caption">честно заслужено</div></article>
+          <article class="metric-card"><div class="metric-label">Лучший стрик</div><div class="metric-value" id="metric-streak">0 <small style="font-size:12px;font-weight:500">дней</small></div><div class="metric-caption">и это ещё не предел</div></article>
+        </div>
+        <div class="analytics-grid">
+          <article class="analytic-card"><h3 class="analytic-title">Задачи за неделю</h3><p class="analytic-subtitle">Выполненные задачи по дням</p><div class="bar-chart" id="week-chart"></div></article>
+          <article class="analytic-card"><h3 class="analytic-title">Баланс приоритетов</h3><p class="analytic-subtitle">Какие задачи ты закрываешь</p><div class="distribution"><div class="donut" id="task-donut"><div class="donut-center"><div class="donut-number" id="donut-total">0</div><div class="donut-label">задач</div></div></div><div class="legend"><div class="legend-item"><span class="legend-dot" style="background:#cf766d"></span>Срочно и важно <b id="dist-q1">0%</b></div><div class="legend-item"><span class="legend-dot" style="background:#d1b15e"></span>Важно <b id="dist-q2">0%</b></div><div class="legend-item"><span class="legend-dot" style="background:#7891a8"></span>Срочно <b id="dist-q3">0%</b></div><div class="legend-item"><span class="legend-dot" style="background:#b0b1a9"></span>Рутина <b id="dist-q4">0%</b></div></div></div></article>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <section class="settings-modal">
+      <div class="modal-head"><h2 class="modal-title" id="settings-title">Настройки</h2><button class="close-btn" id="close-settings" aria-label="Закрыть">×</button></div>
+      <div class="setting-group"><label class="setting-label">Тема оформления</label><div class="theme-choices"><button class="theme-choice selected" data-theme="light" type="button"><strong>Светлая</strong></button><button class="theme-choice" data-theme="dark" type="button"><strong>Тёмная</strong></button></div><p class="setting-hint">Тема применяется сразу и сохраняется на этом устройстве.</p></div>
+      <div class="setting-group"><label class="setting-label" for="api-key">Google Gemini API-ключ</label><input class="field" id="api-key" type="password" placeholder="Вставь свой API-ключ" autocomplete="off"><p class="setting-hint">Ключ хранится только в localStorage этого браузера и используется для запросов к Gemini. Без ключа доступны встроенные подсказки.</p></div>
+      <div class="modal-actions"><button class="btn" id="save-settings">Сохранить настройки</button></div>
+    </section>
+  </div>
+  <script>
+    (() => {
+      "use strict";
+      const STORAGE_KEY = "task-matrix-rpg-v1";
+      const REWARDS_KEY = "task-matrix-rewards-v1";
+      const SETTINGS_KEY = "task-matrix-settings-v1";
+      const POINTS = { q1: { xp: 40, coins: 40 }, q2: { xp: 30, coins: 25 }, q3: { xp: 15, coins: 15 }, q4: { xp: 10, coins: 8 } };
+      const NAMES = { q1: "Срочно и важно", q2: "Важно, не срочно", q3: "Срочно, не важно", q4: "Не срочно, не важно" };
+      const EMOJI = ["🎮", "☕", "🍰", "📚", "🎬", "🛁", "🌿", "🍕", "🎧", "🧁"];
+      const todayKey = () => new Date().toLocaleDateString("en-CA");
+      const safeRead = (key, fallback) => {
+        try { const value = localStorage.getItem(key); return value ? JSON.parse(value) : fallback; }
+        catch (error) { console.error(`Не удалось прочитать ${key}`, error); return fallback; }
+      };
+      let state = safeRead(STORAGE_KEY, { tasks: [], xp: 0, coins: 0, earned: 0, streak: 0, bestStreak: 0, lastDone: null, completedDays: {}, completionLog: [] });
+      let rewards = safeRead(REWARDS_KEY, [
+        { id: "reward-game", name: "Час любимой игры", price: 120, emoji: "🎮", description: "Время для того, что тебя по-настоящему увлекает." },
+        { id: "reward-coffee", name: "Кофе вне дома", price: 85, emoji: "☕", description: "Небольшая пауза и любимый напиток." },
+        { id: "reward-film", name: "Вечер кино", price: 160, emoji: "🎬", description: "Без чувства вины, с пледом и хорошим фильмом." },
+        { id: "reward-treat", name: "Любимое угощение", price: 65, emoji: "🍰", description: "Маленькое «молодец» самому себе." }
+      ]);
+      let settings = safeRead(SETTINGS_KEY, { theme: "minimal", apiKey: "" });
+      if (!state || !Array.isArray(state.tasks)) state = { tasks: [], xp: 0, coins: 0, earned: 0, streak: 0, bestStreak: 0, lastDone: null, completedDays: {}, completionLog: [] };
+      if (!Array.isArray(rewards)) rewards = [];
+      if (!Array.isArray(state.completionLog)) state.completionLog = [];
+      if (!state.completedDays || typeof state.completedDays !== "object") state.completedDays = {};
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+      const escapeHTML = value => String(value).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+      const persist = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { console.error("Не удалось сохранить прогресс", error); showToast("Не удалось сохранить прогресс в браузере."); } };
+      const persistRewards = () => { try { localStorage.setItem(REWARDS_KEY, JSON.stringify(rewards)); } catch (error) { console.error("Не удалось сохранить награды", error); showToast("Не удалось сохранить награды."); } };
+      const showToast = message => { const toast = $("#toast"); toast.textContent = message; toast.classList.add("show"); clearTimeout(showToast.timeout); showToast.timeout = setTimeout(() => toast.classList.remove("show"), 2800); };
+      const dayDiff = (a, b) => Math.round((new Date(`${b}T12:00:00`) - new Date(`${a}T12:00:00`)) / 86400000);
+      const updateProfile = () => {
+        const level = Math.floor(state.xp / 100) + 1, current = state.xp % 100;
+        ["desktop", "mobile"].forEach(place => {
+          $(`#level-${place}`).textContent = `Уровень ${level}`;
+          $(`#xp-${place}`).textContent = `${current} / 100 XP`;
+          $(`#xp-fill-${place}`).style.width = `${current}%`;
+          $(`#coins-${place}`).textContent = state.coins;
+          $(`#streak-${place}`).textContent = state.streak;
+        });
+        $("#shop-coins").textContent = state.coins;
+      };
+      const renderTasks = () => {
+        Object.keys(POINTS).forEach(q => {
+          const items = state.tasks.filter(task => task.quadrant === q);
+          $(`[data-count="${q}"]`).textContent = items.filter(task => !task.completed).length;
+          const list = $(`[data-list="${q}"]`);
+          if (!items.length) { list.innerHTML = '<div class="empty-text">Пока здесь пусто. Добавь первую задачу.</div>'; return; }
+          list.innerHTML = items.map(task => `<div class="task-card ${task.completed ? "completed" : ""}" data-task-card="${escapeHTML(task.id)}">
+            <input class="task-check" type="checkbox" data-complete="${escapeHTML(task.id)}" aria-label="${task.completed ? "Задача выполнена" : "Выполнить задачу"}" ${task.completed ? "checked disabled" : ""}>
+            <div class="task-content"><div class="task-title">${escapeHTML(task.title)}</div><div class="task-meta"><span>+${POINTS[q].xp} XP</span><span>◉ ${POINTS[q].coins} монет</span>${task.subtasks?.length ? `<button class="task-action" data-decompose="${escapeHTML(task.id)}" type="button">Обновить шаги</button>` : `<button class="task-action" data-decompose="${escapeHTML(task.id)}" type="button">🧩 Разбить через AI</button>`}</div>${task.subtasks?.length ? `<div class="subtasks">${task.subtasks.map((step, i) => `<label class="subtask"><input type="checkbox" data-subtask="${escapeHTML(task.id)}" data-step="${i}" ${step.done ? "checked" : ""}><span>${escapeHTML(step.text)}</span></label>`).join("")}</div>` : ""}</div>
+          </div>`).join("");
+        });
+      };
+      const renderRewards = () => {
+        const list = $("#reward-list");
+        if (!rewards.length) { list.innerHTML = '<div class="empty-shop">Тут скоро появится что-то приятное ✨</div>'; return; }
+        list.innerHTML = rewards.map(reward => `<article class="reward-card"><div class="reward-top"><span class="reward-emoji">${escapeHTML(reward.emoji || "🎁")}</span><span class="reward-price">◉ ${Number(reward.price)}</span></div><h3 class="reward-name">${escapeHTML(reward.name)}</h3><p class="reward-desc">${escapeHTML(reward.description || "Награда, которую ты заслужил.")}</p><div class="reward-footer"><button class="btn secondary small" data-buy="${escapeHTML(reward.id)}">Купить</button><button class="delete-reward" data-delete-reward="${escapeHTML(reward.id)}" aria-label="Удалить награду">×</button></div></article>`).join("");
+      };
+      const renderAnalytics = () => {
+        $("#metric-tasks").textContent = state.completionLog.length;
+        $("#metric-earned").textContent = state.earned;
+        $("#metric-streak").innerHTML = `${state.bestStreak}<small style="font-size:12px;font-weight:500"> дней</small>`;
+        const today = new Date();
+        const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(today); d.setDate(today.getDate() - (6 - i)); return d; });
+        const counts = days.map(day => {
+          const key = day.toLocaleDateString("en-CA");
+          return state.completionLog.filter(item => item.date === key).length;
+        });
+        const max = Math.max(...counts, 1);
+        $("#week-chart").innerHTML = days.map((day, i) => `<div class="bar-wrap"><span class="bar-value">${counts[i] || ""}</span><div class="bar ${i === 6 ? "today" : ""}" style="height:${Math.max(counts[i] ? 7 : 3, counts[i] / max * 93)}%"></div><span class="bar-label">${["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"][day.getDay()]}</span></div>`).join("");
+        const completed = state.tasks.filter(task => task.completed);
+        const total = completed.length;
+        $("#donut-total").textContent = total;
+        Object.keys(POINTS).forEach((q, i) => {
+          const count = completed.filter(task => task.quadrant === q).length;
+          $(`#dist-${q}`).textContent = `${total ? Math.round(count / total * 100) : 0}%`;
+        });
+        if (total) {
+          const colors = ["#cf766d", "#d1b15e", "#7891a8", "#b0b1a9"];
+          let offset = 0;
+          const segments = Object.keys(POINTS).map((q, i) => {
+            const amount = completed.filter(task => task.quadrant === q).length / total * 100;
+            const segment = `${colors[i]} ${offset}% ${offset + amount}%`; offset += amount; return segment;
+          });
+          $("#task-donut").style.background = `conic-gradient(${segments.join(",")})`;
+        } else { $("#task-donut").style.background = "conic-gradient(#e8e8e1 0 100%)"; }
+      };
+      const renderAll = () => { updateProfile(); renderTasks(); renderRewards(); renderAnalytics(); };
+      const setTheme = theme => {
+        const dark = theme === "dark";
+        settings.theme = dark ? "dark" : "light";
+        document.body.classList.toggle("theme-dark", dark);
+        document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        const themeColor = document.querySelector('meta[name="theme-color"]');
+        if (themeColor) themeColor.content = dark ? "#191a18" : "#f4f2ed";
+        $$(".theme-choice").forEach(button => button.classList.toggle("selected", button.dataset.theme === settings.theme));
+        $$(".theme-toggle").forEach(button => {
+          button.textContent = dark ? "☼" : "☾";
+          button.setAttribute("aria-label", dark ? "Включить светлую тему" : "Включить тёмную тему");
+          button.title = dark ? "Светлая тема" : "Тёмная тема";
+        });
+      };
+      setTheme(settings.theme === "dark" ? "dark" : "light");
+      const switchPage = page => {
+        $$(".tab-btn").forEach(button => button.classList.toggle("active", button.dataset.page === page));
+        $$(".page").forEach(section => section.classList.toggle("active", section.id === `page-${page}`));
+      };
+      $$(".tab-btn").forEach(button => button.addEventListener("click", () => switchPage(button.dataset.page)));
+      $$("[data-goto]").forEach(button => button.addEventListener("click", () => switchPage(button.dataset.goto)));
+      $$(".quad-tab").forEach(button => button.addEventListener("click", () => {
+        $$(".quad-tab").forEach(tab => tab.classList.toggle("active", tab === button));
+        $$(".quadrant").forEach(panel => panel.classList.toggle("mobile-active", panel.dataset.q === button.dataset.quadrant));
+      }));
+      $("#task-form").addEventListener("submit", event => {
+        event.preventDefault();
+        const input = $("#task-input"), title = input.value.trim(), quadrant = $("#task-quadrant").value;
+        if (!title) return;
+        state.tasks.unshift({ id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title, quadrant, completed: false, createdAt: todayKey(), subtasks: [] });
+        persist(); renderAll(); input.value = ""; input.focus(); showToast("Задача добавлена. Ты уже начал ✨");
+      });
+      const confetti = () => {
+        const colors = ["#a5b79a", "#e5c579", "#d98373", "#7f9fb0", "#ede8d8"];
+        for (let i = 0; i < 45; i++) {
+          const bit = document.createElement("i"); bit.className = "confetti"; bit.style.left = `${Math.random() * 100}vw`; bit.style.background = colors[i % colors.length]; bit.style.animationDelay = `${Math.random() * .35}s`; bit.style.transform = `rotate(${Math.random() * 150}deg)`; document.body.append(bit); setTimeout(() => bit.remove(), 2300);
+        }
+      };
+      const completeTask = id => {
+        const task = state.tasks.find(item => item.id === id);
+        if (!task || task.completed) return;
+        const today = todayKey();
+        if (state.lastDone !== today) {
+          if (state.lastDone && dayDiff(state.lastDone, today) === 1) state.streak += 1;
+          else state.streak = 1;
+          state.lastDone = today;
+          state.bestStreak = Math.max(state.bestStreak, state.streak);
+          state.completedDays[today] = true;
+        }
+        const multiplier = state.streak >= 7 ? 2 : state.streak >= 2 ? 1.5 : 1;
+        const base = POINTS[task.quadrant];
+        const coinsAwarded = Math.round(base.coins * multiplier);
+        task.completed = true; task.completedAt = today;
+        state.xp += base.xp; state.coins += coinsAwarded; state.earned += coinsAwarded;
+        state.completionLog.push({ date: today, quadrant: task.quadrant, coins: coinsAwarded });
+        persist(); renderAll();
+        showToast(`+${base.xp} XP · +${coinsAwarded} монет${multiplier > 1 ? ` · множитель x${multiplier}` : ""}`);
+        if (task.quadrant === "q1") confetti();
+      };
+      const decompose = async task => {
+        if (!settings.apiKey) { showToast("Добавь Gemini API-ключ в настройках для AI-декомпозиции."); openSettings(); return; }
+        const button = $(`[data-decompose="${CSS.escape(task.id)}"]`);
+        if (button) { button.disabled = true; button.textContent = "AI думает…"; }
+        try {
+          const result = await gemini(`Разбей задачу на 3 или 4 простых, конкретных, последовательных шага. Верни ТОЛЬКО JSON-массив строк, без markdown. Задача: ${task.title}`);
+          const parsed = JSON.parse(result.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, ""));
+          if (!Array.isArray(parsed) || parsed.length < 3 || parsed.length > 4 || parsed.some(step => typeof step !== "string" || !step.trim())) throw new Error("AI вернул некорректный список шагов.");
+          task.subtasks = parsed.map(text => ({ text: text.trim(), done: false })); persist(); renderTasks(); showToast("Готово — задача стала проще и понятнее.");
+        } catch (error) { console.error("Ошибка AI-декомпозиции", error); showToast(`Не удалось разбить задачу: ${error.message}`); if (button) { button.disabled = false; button.textContent = "🧩 Разбить через AI"; } }
+      };
+      $("#page-matrix").addEventListener("change", event => {
+        const checkbox = event.target.closest("[data-complete]");
+        if (checkbox) { if (checkbox.checked) completeTask(checkbox.dataset.complete); return; }
+        const step = event.target.closest("[data-subtask]");
+        if (step) {
+          const task = state.tasks.find(item => item.id === step.dataset.subtask);
+          if (task?.subtasks?.[Number(step.dataset.step)]) { task.subtasks[Number(step.dataset.step)].done = step.checked; persist(); }
+        }
+      });
+      $("#page-matrix").addEventListener("click", event => {
+        const button = event.target.closest("[data-decompose]");
+        if (button) { const task = state.tasks.find(item => item.id === button.dataset.decompose); if (task) decompose(task); }
+      });
+      let focusedTaskId = null;
+      $("#choose-focus").addEventListener("click", () => {
+        const candidates = state.tasks.filter(task => !task.completed && (task.quadrant === "q1" || task.quadrant === "q2"));
+        const task = candidates.find(item => item.quadrant === "q1") || candidates[0];
+        if (!task) { showToast("Сначала добавь задачу в «Срочно и важно» или «Важно»."); switchPage("matrix"); return; }
+        focusedTaskId = task.id;
+        $("#focus-grid").classList.add("is-focused");
+        $("#focus-content").innerHTML = `<h3 class="focus-task-title">${escapeHTML(task.title)}</h3><p class="focus-task-desc">${NAMES[task.quadrant]} · +${POINTS[task.quadrant].xp} XP за выполнение</p>`;
+        $("#focus-priority").textContent = task.quadrant === "q1" ? "БОСС-ЗАДАЧА" : "СТРАТЕГИЯ";
+        $("#finish-focus").hidden = false;
+        $("#choose-focus").textContent = "Выбрать другую";
+        getMentorTip();
+      });
+      $("#finish-focus").addEventListener("click", () => {
+        if (focusedTaskId) { completeTask(focusedTaskId); focusedTaskId = null; $("#focus-grid").classList.remove("is-focused"); $("#focus-content").innerHTML = '<h3>Ещё одна маленькая победа.</h3><p>Выбери следующую задачу, когда будешь готов.</p>'; $("#finish-focus").hidden = true; $("#choose-focus").textContent = "✦ Что делать сейчас?"; $("#focus-priority").textContent = "ГОТОВ К СТАРТУ"; }
+      });
+      const gemini = async prompt => {
+        if (!settings.apiKey) throw new Error("Добавь API-ключ Gemini в настройках.");
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(settings.apiKey)}`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: .7, maxOutputTokens: 250 } })
+        });
+        if (!response.ok) {
+          let detail = `HTTP ${response.status}`;
+          try { const body = await response.json(); detail = body.error?.message || detail; } catch (error) { console.error("Не удалось прочитать ошибку Gemini", error); }
+          throw new Error(detail);
+        }
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.map(part => part.text || "").join("").trim();
+        if (!text) throw new Error("Gemini вернул пустой ответ.");
+        return text;
+      };
+      async function getMentorTip() {
+        const pending = state.tasks.filter(task => !task.completed).slice(0, 8).map(task => task.title);
+        if (!settings.apiKey) {
+          const tips = [
+            "Не нужно делать всё сразу. Выбери один маленький шаг — и этого достаточно для начала.",
+            "Ты уже уделил этому время и внимание. Продолжай в своём темпе — прогресс не обязан быть громким.",
+            "Начать можно неидеально. Главное — дать себе шанс сделать первый шаг."
+          ];
+          $("#mentor-quote").textContent = tips[Math.floor(Math.random() * tips.length)];
+          showToast("Это поддержка от Task Matrix. Добавь Gemini API-ключ для персонального совета.");
+          return;
+        }
+        const button = $("#refresh-mentor"); button.disabled = true; button.textContent = "AI подбирает слова…";
+        try {
+          const tip = await gemini(`Ты добрый, лаконичный AI-ментор по продуктивности. Напиши одну короткую поддерживающую фразу на русском (1–2 предложения), с учётом стрика ${state.streak} дней и списка ближайших задач: ${pending.join("; ") || "задач пока нет"}. Без кавычек.`);
+          $("#mentor-quote").textContent = tip; showToast("Для тебя есть несколько добрых слов.");
+        } catch (error) { console.error("Ошибка AI-ментора", error); showToast(`Совет не загрузился: ${error.message}`); }
+        finally { button.disabled = false; button.textContent = "Получить совет от AI ↗"; }
+      }
+      $("#refresh-mentor").addEventListener("click", getMentorTip);
+      const WORK_SECONDS = 25 * 60, BREAK_SECONDS = 5 * 60;
+      let remaining = WORK_SECONDS, timerInterval = null, isBreak = false;
+      const paintTimer = () => { const total = isBreak ? BREAK_SECONDS : WORK_SECONDS; $("#timer-time").textContent = `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(remaining % 60).padStart(2, "0")}`; $("#timer-ring").style.setProperty("--progress", `${(total - remaining) / total * 100}%`); $("#timer-mode").textContent = isBreak ? "5 мин отдыха" : "25 мин работы"; $("#timer-start").textContent = timerInterval ? "Пауза" : "Старт"; };
+      $("#timer-start").addEventListener("click", () => {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; paintTimer(); return; }
+        timerInterval = setInterval(() => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(timerInterval); timerInterval = null;
+            if (!isBreak) { state.coins += 20; state.earned += 20; persist(); renderAll(); showToast("Помодоро завершён! +20 монет · ⚡ Энергия твоя."); isBreak = true; remaining = BREAK_SECONDS; }
+            else { isBreak = false; remaining = WORK_SECONDS; showToast("Перерыв окончен. Ты готов к новому фокусу ✨"); }
+          }
+          paintTimer();
+        }, 1000);
+        paintTimer();
+      });
+      $("#timer-reset").addEventListener("click", () => { clearInterval(timerInterval); timerInterval = null; isBreak = false; remaining = WORK_SECONDS; paintTimer(); });
+      paintTimer();
+      $("#estimate-price").addEventListener("click", async () => {
+        const name = $("#reward-input").value.trim();
+        if (!name) { showToast("Сначала придумай награду."); $("#reward-input").focus(); return; }
+        if (!settings.apiKey) { showToast("Добавь Gemini API-ключ в настройках для оценки."); openSettings(); return; }
+        const button = $("#estimate-price"); button.disabled = true; button.textContent = "Считаю…";
+        try {
+          const answer = await gemini(`Оцени справедливую цену в виртуальных монетах для награды «${name}». Диапазон строго от 30 до 500. Ответь только целым числом, без пояснений.`);
+          const price = Number(answer.match(/\d{1,3}/)?.[0]);
+          if (!Number.isInteger(price) || price < 30 || price > 500) throw new Error("AI предложил цену вне диапазона 30–500.");
+          $("#reward-price").value = price; $("#price-hint").textContent = `AI предлагает ${price} монет — можешь изменить цену перед добавлением.`; showToast("AI подобрал цену награды.");
+        } catch (error) { console.error("Ошибка оценки награды", error); showToast(`Не удалось оценить награду: ${error.message}`); }
+        finally { button.disabled = false; button.textContent = "🤖 Оценить"; }
+      });
+      $("#reward-form").addEventListener("submit", event => {
+        event.preventDefault();
+        const name = $("#reward-input").value.trim(), price = Number($("#reward-price").value);
+        if (!name || !Number.isInteger(price) || price < 30 || price > 500) { showToast("Укажи название и цену от 30 до 500 монет."); return; }
+        rewards.unshift({ id: `reward-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, name, price, emoji: EMOJI[Math.floor(Math.random() * EMOJI.length)], description: "Твоя награда за проделанную работу." });
+        persistRewards(); renderRewards(); event.target.reset(); $("#price-hint").textContent = "Стоимость от 30 до 500 монет — придумай сам или доверь оценку AI."; showToast("Новая награда ждёт тебя в магазине.");
+      });
+      let audioContext;
+      const purchaseSound = () => {
+        try {
+          audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+          const oscillator = audioContext.createOscillator(), gain = audioContext.createGain();
+          oscillator.type = "sine"; oscillator.frequency.setValueAtTime(660, audioContext.currentTime); oscillator.frequency.exponentialRampToValueAtTime(990, audioContext.currentTime + .12);
+          gain.gain.setValueAtTime(.12, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(.001, audioContext.currentTime + .24);
+          oscillator.connect(gain); gain.connect(audioContext.destination); oscillator.start(); oscillator.stop(audioContext.currentTime + .24);
+        } catch (error) { console.error("Не удалось воспроизвести звук покупки", error); }
+      };
+      $("#reward-list").addEventListener("click", event => {
+        const buy = event.target.closest("[data-buy]");
+        if (buy) {
+          const reward = rewards.find(item => item.id === buy.dataset.buy);
+          if (!reward) return;
+          if (state.coins < reward.price) { showToast(`Пока не хватает ${reward.price - state.coins} монет — ты справишься!`); return; }
+          state.coins -= reward.price; persist(); renderAll(); purchaseSound(); showToast(`«${reward.name}» — заслуженная награда! 🎉`); return;
+        }
+        const remove = event.target.closest("[data-delete-reward]");
+        if (remove) { rewards = rewards.filter(item => item.id !== remove.dataset.deleteReward); persistRewards(); renderRewards(); showToast("Награда удалена."); }
+      });
+      const modal = $("#settings-modal");
+      function openSettings() { $("#api-key").value = settings.apiKey || ""; modal.classList.add("open"); }
+      $$(".settings-open").forEach(button => button.addEventListener("click", openSettings));
+      $("#close-settings").addEventListener("click", () => modal.classList.remove("open"));
+      modal.addEventListener("click", event => { if (event.target === modal) modal.classList.remove("open"); });
+      document.addEventListener("keydown", event => { if (event.key === "Escape") modal.classList.remove("open"); });
+      const saveSettings = () => {
+        try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); return true; }
+        catch (error) { console.error("Не удалось сохранить настройки", error); showToast("Не удалось сохранить настройки."); return false; }
+      };
+      $$(".theme-toggle").forEach(button => button.addEventListener("click", () => {
+        setTheme(settings.theme === "dark" ? "light" : "dark");
+        saveSettings();
+      }));
+      $$(".theme-choice").forEach(button => button.addEventListener("click", () => {
+        setTheme(button.dataset.theme);
+        saveSettings();
+      }));
+      $("#save-settings").addEventListener("click", () => {
+        settings.apiKey = $("#api-key").value.trim();
+        if (!saveSettings()) return;
+        modal.classList.remove("open"); showToast("Настройки сохранены.");
+      });
+      const now = new Date();
+      $("#today-label").textContent = new Intl.DateTimeFormat("ru-RU", { weekday: "long", day: "numeric", month: "long" }).format(now).toLocaleUpperCase("ru-RU");
+      renderAll();
+      if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+        navigator.serviceWorker.register("./sw.js").catch(error => console.error("Не удалось подключить офлайн-режим PWA", error));
+      }
+    })();
+  </script>
+</body>
+</html>

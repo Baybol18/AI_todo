@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "Task Matrix RPG",
+  "short_name": "Task Matrix",
+  "description": "Задачи, фокус и маленькие победы каждый день.",
+  "lang": "ru",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f4f0",
+  "theme_color": "#f5f4f0",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
